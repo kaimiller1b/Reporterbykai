@@ -118,7 +118,6 @@ function runR(){var car={},P=[],D=[],ck=[];
       if(s.fl==="YES"){if(d>GRACE)ck.push(tag+": "+l+" flagged YES but actual is "+dly(d)+" after planned.");return}
       if(d===null){ck.push(tag+": "+l+" flagged NO but times are missing/unreadable.");return}
       if(d<=0){ck.push(tag+": "+l+" flagged NO but delay is "+d+" min, skipped.");return}
-      if(d<=GRACE)return;
       if(d>=720)ck.push(tag+": "+l+" delay is "+dly(d)+", looks like a typo?");
       s.d=d;late[s.n].push(s)});
     [["pickup",P],["delivery",D]].forEach(function(z){var a=late[z[0]];if(!a.length)return;
