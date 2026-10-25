@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=04e2b981-6d1f-437a-a193-02683672f727
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Freight Tools</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<h2>Freight Tools</h2>
+<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button></div>
+
+<section id="c">
+<p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
+<textarea id="c-in"></textarea>
+<button onclick="runC()">Convert</button><button onclick="cpC()">Copy output</button>
+<div id="c-w" class="w"></div>
+<textarea id="c-out" readonly></textarea>
+</section>
+
+<section id="f" hidden>
+<p class="s">Paste load rows (first line may be the report date). Flags = fields that are exactly YES/NO.</p>
+<textarea id="f-in"></textarea>
+<div>Report date (if not pasted): <input id="f-date" type="date"></div>
+<button onclick="runF()">Build report</button><button onclick="cpT('f-out')">Copy report</button>
+<div id="f-w" class="w"></div>
+<textarea id="f-out" readonly></textarea>
+</section>
+
+<section id="r" hidden>
+<p class="s">Input 1: trip table. Input 2: tracker sheet (only used for carrier name, matched by REF#).</p>
+<h4>Input 1: trips</h4><textarea id="r-in1"></textarea>
+<h4>Input 2: tracker</h4><textarea id="r-in2"></textarea>
+<button onclick="runR()">Build lists</button>
+<h4>LATE PICKUPS</h4><pre id="r-pk"></pre><button onclick="cpT('r-pk')">Copy pickups</button>
+<h4>LATE DELIVERY</h4><pre id="r-dl"></pre><button onclick="cpT('r-dl')">Copy delivery</button>
+<div id="r-n"></div>
+<h4>CHECK</h4><div id="r-w" class="w"></div>
+</section>
+
+<section id="g" hidden>
+<p class="s">Paste rows (planned/actual dates + flag, x3). Flags get recalculated: 6 min or more late = NO, 0–5 min late or early = YES. Copies as Arial 10, centered.</p>
+<textarea id="g-in"></textarea>
+<button onclick="runG()">Recalculate</button><button onclick="cpG()">Copy output</button>
+<div id="g-w" class="w"></div>
+<textarea id="g-out" readonly></textarea>
+</section>
+
+<script src="app.js"></script></body></html>
+<script async src="/.netlify/scripts/ar" data-netlify-deploy-id="6add5603f3f63652b29ea6b8" data-netlify-site-id="04e2b981-6d1f-437a-a193-02683672f727" data-agent-runner-id="6add55bc9165980747fc5440"></script>
