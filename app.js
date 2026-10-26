@@ -1,7 +1,7 @@
 var $=function(i){return document.getElementById(i)},tr=function(x){return x.trim()},ROWS=[];
 document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tabs button").forEach(function(x){x.className=x==b?"on":""});
-  ["c","f","r","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
+  ["c","m","f","r","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
 function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   for(var i=0;i<t.length;i++){var c=t[i];
     if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else{if(c=="\n")ln++;f+=c}}
@@ -115,7 +115,7 @@ function runR(){var car={},P=[],D=[],ck=[];
     var late={pickup:[],delivery:[]};
     st.forEach(function(s,i){var a=toDate(s.a),p=toDate(s.p),d=a&&p?Math.round((a-p)/6e4):null,l="S"+(i+1);
       if(s.fl!=="YES"&&s.fl!=="NO"){ck.push(tag+": "+l+" flag is not YES/NO.");return}
-      if(s.fl==="YES"){if(d>GRACE)ck.push(tag+": "+l+" flagged YES but actual is "+dly(d)+" after planned.");return}
+      if(s.fl==="YES"){if(d>0)ck.push(tag+": "+l+" flagged YES but actual is "+dly(d)+" after planned.");return}
       if(d===null){ck.push(tag+": "+l+" flagged NO but times are missing/unreadable.");return}
       if(d<=0){ck.push(tag+": "+l+" flagged NO but delay is "+d+" min, skipped.");return}
       if(d>=720)ck.push(tag+": "+l+" delay is "+dly(d)+", looks like a typo?");
@@ -131,7 +131,7 @@ function runR(){var car={},P=[],D=[],ck=[];
   $("r-w").textContent=ck.length?ck.join("\n"):"Nothing to check."}
 
 /* ---------- Flagger ---------- */
-var GRACE=5,GRID=[];
+var GRID=[];
 function qt(x){return/[\t\n"]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}
 function runG(){var warn=[],ch=0;GRID=[];
   parse($("g-in").value).forEach(function(r){var f=r.map(tr),ix=[];
@@ -139,9 +139,26 @@ function runG(){var warn=[],ch=0;GRID=[];
     if(ix.length!==3){warn.push("Line "+r.line+": found "+ix.length+" flags (need 3), left unchanged.");GRID.push(f);return}
     ix.forEach(function(i,s){var A=toDate(f[i-2]),B=toDate(f[i-1]);
       if(i<2||!A||!B){warn.push("Line "+r.line+": stage "+(s+1)+" times unreadable, flag left as is.");return}
-      var d=Math.round((s?A-B:B-A)/6e4),n=d>GRACE?"NO":"YES";
+      var d=Math.round((s?A-B:B-A)/6e4),n=d>0?"NO":"YES";
       if(n!==f[i]){ch++;f[i]=n}});
     GRID.push(f)});
   $("g-out").value=GRID.map(function(f){return f.map(qt).join("\t")}).join("\n");
   $("g-w").textContent=(GRID.length?ch+" flag(s) changed.\n":"")+warn.join("\n")}
 function cpG(){cpH(GRID,$("g-out").value)}
+
+/* ---------- 5 min minuer ---------- */
+var MGRID=[];
+function runM(){var warn=[],ch=0;MGRID=[];
+  parse($("m-in").value).forEach(function(r){var f=r.map(tr),ix=[];
+    f.forEach(function(x,i){if(x==="YES"||x==="NO")ix.push(i)});
+    if(ix.length!==3){warn.push("Line "+r.line+": found "+ix.length+" flags (need 3), left unchanged.");MGRID.push(f);return}
+    ix.forEach(function(i,s){
+      if(f[i]!=="YES")return;
+      var pi=s?i-1:i-2,ai=s?i-2:i-1;
+      if(i<2||!toDate(f[pi])||!toDate(f[ai])){warn.push("Line "+r.line+": stage "+(s+1)+" times unreadable, actual time left unchanged.");return}
+      var p=toDate(f[pi]),a=toDate(f[ai]),d=Math.round((a-p)/6e4);
+      if(d>0&&d<=5){f[ai]=fmt(new Date(a.getTime()-3e5));ch++}});
+    MGRID.push(f)});
+  $("m-out").value=MGRID.map(function(f){return f.map(qt).join("\t")}).join("\n");
+  $("m-w").textContent=(MGRID.length?ch+" actual time(s) adjusted.\n":"")+warn.join("\n")}
+function cpM(){cpH(MGRID,$("m-out").value)}

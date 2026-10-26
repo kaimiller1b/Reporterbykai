@@ -7,7 +7,7 @@
 <title>Freight Tools</title>
 <link rel="stylesheet" href="style.css"></head><body>
 <h2>Freight Tools</h2>
-<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button></div>
+<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button></div>
 
 <section id="c">
 <p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
@@ -15,6 +15,14 @@
 <button onclick="runC()">Convert</button><button onclick="cpC()">Copy output</button>
 <div id="c-w" class="w"></div>
 <textarea id="c-out" readonly></textarea>
+</section>
+
+<section id="m" hidden>
+<p class="s">Paste rows (planned/actual dates + flag, x3). For YES flags that are 1–5 min late, subtracts 5 min from the actual time. All other fields stay unchanged.</p>
+<textarea id="m-in"></textarea>
+<button onclick="runM()">Adjust times</button><button onclick="cpM()">Copy output</button>
+<div id="m-w" class="w"></div>
+<textarea id="m-out" readonly></textarea>
 </section>
 
 <section id="f" hidden>
@@ -38,7 +46,7 @@
 </section>
 
 <section id="g" hidden>
-<p class="s">Paste rows (planned/actual dates + flag, x3). Flags get recalculated: 6 min or more late = NO, 0–5 min late or early = YES. Copies as Arial 10, centered.</p>
+<p class="s">Paste rows (planned/actual dates + flag, x3). Flags get recalculated: 1 min or more late = NO, on time or early = YES. Copies as Arial 10, centered.</p>
 <textarea id="g-in"></textarea>
 <button onclick="runG()">Recalculate</button><button onclick="cpG()">Copy output</button>
 <div id="g-w" class="w"></div>
