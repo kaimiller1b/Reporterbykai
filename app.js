@@ -44,6 +44,11 @@ function stopDates(s){var a=[],re=/\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d{1,2}:\d{2}/g,m
   return a}
 function dateOnly(d){return(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear()}
 function samePlace(a,b){return a.toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ")===b.toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ")}
+function cpD(){var e=$("d-out"),text=e.value,b=window.event&&window.event.target;
+  function done(ok){if(!b||b.tagName!="BUTTON")return;var label=b.dataset.l||b.textContent;b.dataset.l=label;b.textContent=ok?"Copied!":"Copy failed";clearTimeout(b._t);b._t=setTimeout(function(){b.textContent=label},1500)}
+  function fallback(){e.focus();e.select();var ok=false;try{ok=document.execCommand("copy")}catch(x){}done(ok)}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){done(true)},fallback);
+  else fallback()}
 function runD(){var out=[],warn=[];
   parse($("d-in").value).forEach(function(r){var f=r.map(tr),ci=-1;
     for(var i=f.length-1;i>=0;i--)if(f[i]){ci=i;break}
@@ -54,7 +59,7 @@ function runD(){var out=[],warn=[];
     var deliveryIndex=isRoundTrip?dests.length-2:dests.length-1,deliveryLocation=dests[deliveryIndex];
     if(isRoundTrip){if(dates.length<dests.length-1)date=null;else date=dates[deliveryIndex]}
     else date=toDate(f[12]);
-    var driver=ci>=2?tr(f[ci-2]):"";
+    var driver=ci>=2?tr(f[ci-2]).replace(/\s+/g," "):"";
     if(!deliveryLocation){warn.push("Line "+r.line+" (trip "+trip+"): delivery location is missing or unreadable; skipped.");return}
     if(!date){warn.push("Line "+r.line+" (trip "+trip+"): delivery date is missing or unreadable; skipped.");return}
     if(!trip||!driver){warn.push("Line "+r.line+": trip number or driver name is missing; skipped.");return}
