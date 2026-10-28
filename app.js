@@ -53,7 +53,7 @@ function runD(){var out=[],warn=[];
   parse($("d-in").value).forEach(function(r){var f=r.map(tr),ci=-1;
     for(var i=f.length-1;i>=0;i--)if(f[i]){ci=i;break}
     if(ci<0||!DELIVERY_CARRIERS.some(function(c){return f[ci].toLowerCase()===c.toLowerCase()}))return;
-    var trip=f[0],origin=f[2],dests=stopDestinations(f[9]),dates=stopDates(f[10]),date;
+    var trip=f[0],load=f[1],origin=f[2],dests=stopDestinations(f[9]),dates=stopDates(f[10]),date;
     if(dests.length!==dates.length)warn.push("Line "+r.line+" (trip "+trip+"): destination/date counts differ.");
     var hubs=["Allen Park, MI","Irving, TX"],isRoundTrip=dests.length>2&&hubs.some(function(h){return samePlace(origin,h)&&samePlace(dests[dests.length-1],h)});
     var deliveryIndex=isRoundTrip?dests.length-2:dests.length-1,deliveryLocation=dests[deliveryIndex];
@@ -62,8 +62,8 @@ function runD(){var out=[],warn=[];
     var driver=ci>=2?tr(f[ci-2]).replace(/\s+/g," "):"";
     if(!deliveryLocation){warn.push("Line "+r.line+" (trip "+trip+"): delivery location is missing or unreadable; skipped.");return}
     if(!date){warn.push("Line "+r.line+" (trip "+trip+"): delivery date is missing or unreadable; skipped.");return}
-    if(!trip||!driver){warn.push("Line "+r.line+": trip number or driver name is missing; skipped.");return}
-    out.push([trip,deliveryLocation,dateOnly(date),driver].join(" "))});
+    if(!trip||!load||!driver){warn.push("Line "+r.line+": trip number, load ID, or driver name is missing; skipped.");return}
+    out.push([trip,load,deliveryLocation,dateOnly(date),driver].join(" "))});
   $("d-out").value=out.join("; ");$("d-w").textContent=warn.join("\n")}
 
 /* ---------- Converter ---------- */
