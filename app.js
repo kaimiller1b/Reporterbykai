@@ -56,8 +56,8 @@ function runD(){var out=[],warn=[];
     var driver=ci>=2?tr(f[ci-2]):"";
     if(!date){warn.push("Line "+r.line+" (trip "+trip+"): delivery date is missing or unreadable; skipped.");return}
     if(!trip||!driver){warn.push("Line "+r.line+": trip number or driver name is missing; skipped.");return}
-    out.push([trip,dateOnly(date),driver].join("\t"))});
-  $("d-out").value=out.join("\n");$("d-w").textContent=warn.join("\n")}
+    out.push([trip,dateOnly(date),driver].join(" "))});
+  $("d-out").value=out.join("; ");$("d-w").textContent=warn.join("\n")}
 
 /* ---------- Converter ---------- */
 function runC(){var warn=[];ROWS=[];
