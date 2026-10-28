@@ -10,4 +10,4 @@ button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:9px 14
 .tabs button{background:var(--bd);color:var(--fg)}.tabs button.on{background:var(--ac);color:#fff}
 .w{color:var(--warn);font-size:13px;white-space:pre-wrap}.s{color:var(--mut);font-size:13px}
 h4{margin:10px 0 0}
-#c-out,#f-out,#g-out,#r-pk,#r-dl{font:10pt Arial,sans-serif;text-align:center}
+#c-out,#f-out,#g-out,#d-out,#r-pk,#r-dl{font:10pt Arial,sans-serif;text-align:center}

@@ -7,7 +7,7 @@
 <title>Freight Tools</title>
 <link rel="stylesheet" href="style.css"></head><body>
 <h2>Freight Tools</h2>
-<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button></div>
+<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button><button data-t="d">Delivery Dates</button></div>
 
 <section id="c">
 <p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
@@ -43,6 +43,14 @@
 <h4>LATE DELIVERY</h4><pre id="r-dl"></pre><button onclick="cpT('r-dl')">Copy delivery</button>
 <div id="r-n"></div>
 <h4>CHECK</h4><div id="r-w" class="w"></div>
+</section>
+
+<section id="d" hidden>
+<p class="s">Paste trip rows. Returns trip, actual delivery date, and driver name for SALEM TRUCK RENTAL LLC, WRNR LLC, and Lucky Freight LLC. Round trips from Allen Park, MI or Irving, TX use the date for the stop before the return destination.</p>
+<textarea id="d-in"></textarea>
+<button onclick="runD()">Find deliveries</button><button onclick="cpT('d-out')">Copy output</button>
+<div id="d-w" class="w"></div>
+<textarea id="d-out" readonly></textarea>
 </section>
 
 <section id="g" hidden>

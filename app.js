@@ -1,7 +1,7 @@
 var $=function(i){return document.getElementById(i)},tr=function(x){return x.trim()},ROWS=[];
 document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tabs button").forEach(function(x){x.className=x==b?"on":""});
-  ["c","m","f","r","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
+  ["c","m","f","r","d","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
 function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   for(var i=0;i<t.length;i++){var c=t[i];
     if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else{if(c=="\n")ln++;f+=c}}
@@ -33,6 +33,31 @@ function cpH(rows,plain){var e=function(x){return String(x).replace(/&/g,"&amp;"
   else if(legacy())done(true);
   else text().then(function(){done(true)},function(){done(false)})}
 function cpT(id){var e=$(id),t=e.tagName=="TEXTAREA"?e.value:e.textContent;cpH(t.split("\n").map(function(l){return[l]}),t)}
+
+/* ---------- Delivery dates ---------- */
+var DELIVERY_CARRIERS=["SALEM TRUCK RENTAL LLC","WRNR LLC","Lucky Freight LLC"];
+function stopDestinations(s){var a=[],re=/([A-Za-z0-9.' -]+,\s*[A-Z]{2})(?=\s|$)/g,m;
+  while((m=re.exec(s||""))!==null)a.push(tr(m[1]));
+  return a}
+function stopDates(s){var a=[],re=/\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d{1,2}:\d{2}/g,m;
+  while((m=re.exec(s||""))!==null){var d=toDate(m[0]);if(d)a.push(d)}
+  return a}
+function dateOnly(d){return(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear()}
+function samePlace(a,b){return a.toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ")===b.toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ")}
+function runD(){var out=[],warn=[];
+  parse($("d-in").value).forEach(function(r){var f=r.map(tr),ci=-1;
+    for(var i=f.length-1;i>=0;i--)if(f[i]){ci=i;break}
+    if(ci<0||!DELIVERY_CARRIERS.some(function(c){return f[ci].toLowerCase()===c.toLowerCase()}))return;
+    var trip=f[0],origin=f[2],dests=stopDestinations(f[9]),dates=stopDates(f[10]),date;
+    if(dests.length!==dates.length)warn.push("Line "+r.line+" (trip "+trip+"): destination/date counts differ.");
+    var hubs=["Allen Park, MI","Irving, TX"],isRoundTrip=dests.length>2&&hubs.some(function(h){return samePlace(origin,h)&&samePlace(dests[dests.length-1],h)});
+    if(isRoundTrip){if(dates.length<dests.length-1)date=null;else date=dates[dests.length-2]}
+    else date=toDate(f[12]);
+    var driver=ci>=2?tr(f[ci-2]):"";
+    if(!date){warn.push("Line "+r.line+" (trip "+trip+"): delivery date is missing or unreadable; skipped.");return}
+    if(!trip||!driver){warn.push("Line "+r.line+": trip number or driver name is missing; skipped.");return}
+    out.push([trip,dateOnly(date),driver].join("\t"))});
+  $("d-out").value=out.join("\n");$("d-w").textContent=warn.join("\n")}
 
 /* ---------- Converter ---------- */
 function runC(){var warn=[];ROWS=[];
