@@ -68,11 +68,19 @@ function runD(){var out=[],warn=[];
 
 /* ---------- Converter ---------- */
 function runC(){var warn=[];ROWS=[];
+  var selectedDate=$("c-date").value;
+  if(!selectedDate){$("c-out").value="";$("c-w").textContent="Choose a day to include (same date used in GEGW).";return}
+  var dayKey=selectedDate;
   parse($("c-in").value).forEach(function(r){
+    var status=tr(r[4]||"");
+    if(/cancelled|tonu/i.test(status)){warn.push("this load was removed : "+status);return}
     var ne=r.map(tr).filter(Boolean);if(ne.length<5)return;
     var trip=tr(r[0]),load=tr(r[1]),pick=tr(r[2]),sched=toDate(r[3]);
+    if(!sched){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
+    var scheduledKey=sched.getFullYear()+"-"+String(sched.getMonth()+1).padStart(2,"0")+"-"+String(sched.getDate()).padStart(2,"0");
+    if(scheduledKey!==dayKey)return;
     var dests=lines(ne[ne.length-2]),dates=lines(ne[ne.length-1]).map(toDate);
-    if(!sched||!dests.length||!dates.length||dates.some(function(d){return !d})){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
+    if(!dests.length||!dates.length||dates.some(function(d){return !d})){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
     var k=Math.min(dests.length,dates.length)-1;
     if(dests.length!==dates.length)warn.push("Line "+r.line+" (trip "+trip+"): destination/date counts differ. Check it.");
     var nz=function(s){return s.toLowerCase().replace(/\s+/g," ")};
