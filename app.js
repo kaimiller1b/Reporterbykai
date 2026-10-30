@@ -120,7 +120,7 @@ function runF(){var rows=parse($("f-in").value),warn=[],date="";
 var COMPOUND=["Dock/Yard operations","Traffic/Construction"];
 var ROUTE=/^[^,]+,\s*[A-Z]{2}\s*-\s*[^,]+,\s*[A-Z]{2}$/;
 function dly(m){var h=Math.floor(m/60),n=m%60,p=[];if(h)p.push(h+(h==1?"hr":"hrs"));if(n)p.push(n+(n==1?"min":"mins"));return p.join(" ")}
-function runR(){var car={},P=[],D=[],ck=[];
+function runR(){var car={},P=[],D=[],ck=[],hasTracker=!!tr($("r-in2").value);
   parse($("r-in2").value).forEach(function(r){var f=r.map(tr),e=f.length;
     while(e>0&&(!f[e-1]||/^tracking/i.test(f[e-1])))e--;
     var c=e>0?f[e-1]:"";if(/^[\d\s()+.\-]+$/.test(c))c="";
@@ -155,9 +155,10 @@ function runR(){var car={},P=[],D=[],ck=[];
     [["pickup",P],["delivery",D]].forEach(function(z){var a=late[z[0]];if(!a.length)return;
       var mx=Math.max.apply(null,a.map(function(s){return s.d})),rs=[];
       a.forEach(function(s){if(rs.indexOf(s.r)<0)rs.push(s.r)});
-      var c=car[ref];if(!c){c="[CARRIER]";ck.push(tag+": carrier blank or REF# not in tracker.")}
+      var c=car[ref];if(!c&&hasTracker){c="[CARRIER]";ck.push(tag+": carrier blank or REF# not in tracker.")}
       if(rs.indexOf("(none in data)")>=0)ck.push(tag+": no reason in data ("+z[0]+").");
-      z[1].push("REF# "+ref+" // "+truck+" => "+route+"\nREASON: "+rs.join("/")+"\nDELAY: "+dly(mx)+"\n"+c)})});
+      var report=["REF# "+ref+" // "+truck+" => "+route,"REASON: "+rs.join("/"),"DELAY: "+dly(mx)];
+      if(c)report.push(c);z[1].push(report.join("\n"))})});
   $("r-pk").textContent=P.join("\n\n");$("r-dl").textContent=D.join("\n\n");
   $("r-n").textContent=P.length+" pickup entries and "+D.length+" delivery entries";
   $("r-w").textContent=ck.length?ck.join("\n"):"Nothing to check."}
