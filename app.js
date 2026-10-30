@@ -73,7 +73,7 @@ function runC(){var warn=[];ROWS=[];
   var dayKey=selectedDate;
   parse($("c-in").value).forEach(function(r){
     var status=tr(r[4]||"");
-    if(/cancelled|tonu/i.test(status)){warn.push("this load was removed : "+status);return}
+    if(/cancelled|tonu/i.test(status)){warn.push("load "+tr(r[1]||"")+" was removed : "+status);return}
     var ne=r.map(tr).filter(Boolean);if(ne.length<5)return;
     var trip=tr(r[0]),load=tr(r[1]),pick=tr(r[2]),sched=toDate(r[3]);
     if(!sched){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
