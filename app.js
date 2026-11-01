@@ -67,6 +67,12 @@ function runD(){var out=[],warn=[];
   $("d-out").value=out.join("; ");$("d-w").textContent=warn.join("\n")}
 
 /* ---------- Converter ---------- */
+function toggleCTime(hours){var id=hours>0?"c-add-hour":"c-minus-hour",on=$(id).getAttribute("aria-pressed")!=="true";
+  ["c-add-hour","c-minus-hour"].forEach(function(i){var b=$(i),active=i===id&&on;
+    b.setAttribute("aria-pressed",String(active));
+    b.textContent=(i==="c-add-hour"?"Add":"Subtract")+" 1 hour: "+(active?"On":"Off")})}
+function shiftCDate(d){var h=$("c-add-hour").getAttribute("aria-pressed")==="true"?1:$("c-minus-hour").getAttribute("aria-pressed")==="true"?-1:0;
+  return d&&h?new Date(d.getTime()+h*36e5):d}
 function runC(){var warn=[];ROWS=[];
   var selectedDate=$("c-date").value;
   if(!selectedDate){$("c-out").value="";$("c-w").textContent="Choose a day to include (same date used in GEGW).";return}
@@ -75,11 +81,11 @@ function runC(){var warn=[];ROWS=[];
     var status=tr(r[4]||"");
     if(/cancelled|tonu/i.test(status)){warn.push("load "+tr(r[1]||"")+" was removed : "+status);return}
     var ne=r.map(tr).filter(Boolean);if(ne.length<5)return;
-    var trip=tr(r[0]),load=tr(r[1]),pick=tr(r[2]),sched=toDate(r[3]);
+    var trip=tr(r[0]),load=tr(r[1]),pick=tr(r[2]),sched=shiftCDate(toDate(r[3]));
     if(!sched){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
     var scheduledKey=sched.getFullYear()+"-"+String(sched.getMonth()+1).padStart(2,"0")+"-"+String(sched.getDate()).padStart(2,"0");
     if(scheduledKey!==dayKey)return;
-    var dests=lines(ne[ne.length-2]),dates=lines(ne[ne.length-1]).map(toDate);
+    var dests=lines(ne[ne.length-2]),dates=lines(ne[ne.length-1]).map(function(s){return shiftCDate(toDate(s))});
     if(!dests.length||!dates.length||dates.some(function(d){return !d})){warn.push("Line "+r.line+" (trip "+trip+"): couldn't parse, skipped.");return}
     var k=Math.min(dests.length,dates.length)-1;
     if(dests.length!==dates.length)warn.push("Line "+r.line+" (trip "+trip+"): destination/date counts differ. Check it.");

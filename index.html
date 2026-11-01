@@ -12,6 +12,7 @@
 <section id="c">
 <p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
 <div>Day to include (same as GEGW): <input id="c-date" type="date"></div>
+<div role="group" aria-label="Table-maker time adjustment">Time adjustment: <button id="c-add-hour" class="time-toggle" type="button" aria-pressed="false" onclick="toggleCTime(1)">Add 1 hour: Off</button><button id="c-minus-hour" class="time-toggle" type="button" aria-pressed="false" onclick="toggleCTime(-1)">Subtract 1 hour: Off</button></div>
 <textarea id="c-in"></textarea>
 <button onclick="runC()">Convert</button><button onclick="cpC()">Copy output</button>
 <textarea id="c-out" readonly></textarea>
