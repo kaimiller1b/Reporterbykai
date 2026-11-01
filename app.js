@@ -1,7 +1,7 @@
 var $=function(i){return document.getElementById(i)},tr=function(x){return x.trim()},ROWS=[];
 document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tabs button").forEach(function(x){x.className=x==b?"on":""});
-  ["c","m","f","r","d","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
+  ["c","m","f","r","lr","d","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
 function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   for(var i=0;i<t.length;i++){var c=t[i];
     if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else{if(c=="\n")ln++;f+=c}}
@@ -170,6 +170,48 @@ function runR(){var car={},P=[],D=[],ck=[],hasTracker=!!tr($("r-in2").value);
   $("r-pk").textContent=P.join("\n\n");$("r-dl").textContent=D.join("\n\n");
   $("r-n").textContent=P.length+" pickup entries and "+D.length+" delivery entries";
   $("r-w").textContent=ck.length?ck.join("\n"):"Nothing to check."}
+
+/* ---------- Late reason filler ---------- */
+function reasonParts(text){var marked=String(text||"");
+  COMPOUND.forEach(function(c){marked=marked.replace(new RegExp(c.split("/").join("\\s*\\/\\s*"),"ig"),c.replace(/\//g,"\u0001"))});
+  return marked.split("/").map(function(x){return tr(x).replace(/\u0001/g,"/")}).filter(Boolean)}
+function hasReasonForStage(reasons,lateStages,stageIndex){var ordinal=lateStages.slice(0,stageIndex+1).filter(Boolean).length-1;
+  return ordinal>=0&&!!reasons[ordinal]}
+function addReason(reasons,reason){if(reasons.some(function(x){return x.toLowerCase()===reason.toLowerCase()}))return false;
+  reasons.push(reason);return true}
+function stageDelay(actualText,plannedText){var actual=toDate(actualText),planned=toDate(plannedText);
+  return actual&&planned?Math.round((actual-planned)/6e4):null}
+function runLR(){var rows=parse($("lr-in").value),messages=[];
+  rows.forEach(function(row){var load=tr(row[3]||"")||"(unknown load)",note=row[14]||"";
+    if(/tracking\s+on\s+time|eta\s+on\s+time/i.test(note))return;
+    if(row.length<15){messages.push("Load "+load+" wasn't updated, check.");return}
+    var reasons=reasonParts(note),flags=[tr(row[7]||""),tr(row[10]||""),tr(row[13]||"")];
+    var delays=[stageDelay(row[6],row[5]),stageDelay(row[8],row[9]),stageDelay(row[11],row[12])];
+    var invalid=false;
+    flags.forEach(function(flag,i){if(flag==="NO"&&(delays[i]===null||delays[i]<=0))invalid=true;
+      if(flag==="YES"&&delays[i]>0)invalid=true});
+    if(invalid){messages.push("Load "+load+" wasn't updated, check.");return}
+    var late=flags.map(function(flag,i){return flag==="NO"&&delays[i]>0});
+    var originalReasons=reasons.slice(),changed=false;
+    if(late[0]){
+      if(!hasReasonForStage(originalReasons,late,0))changed=addReason(reasons,"Stuck at the previous load.")||changed;
+      if(late[2]&&!hasReasonForStage(originalReasons,late,2))changed=addReason(reasons,"late departure")||changed;
+    }else if(late[1]){
+      if(!hasReasonForStage(originalReasons,late,1))messages.push("Load "+load+" wasn't updated, check.");
+      if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
+        if(delays[2]<=delays[1])changed=addReason(reasons,"late departure")||changed;
+        else messages.push("Load "+load+" wasn't updated, check.");
+      }
+    }else if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
+      var reason=delays[2]<=120?"traffic":delays[2]<=240?"mechanical issue":delays[2]<=360?"Health issue":null;
+      if(reason)changed=addReason(reasons,reason)||changed;
+      else messages.push("Load "+load+" wasn't updated, check.");
+    }
+    if(changed)row[14]=reasons.join("/");
+  });
+  $("lr-out").value=rows.map(function(row){return row.join("\t")}).join("\n");
+  $("lr-w").textContent=messages.filter(function(message,index){return messages.indexOf(message)===index}).join("\n")||"Nothing to check."}
+function cpLR(){var text=$("lr-out").value;cpH(parse(text).map(function(row){return row}),text)}
 
 /* ---------- Flagger ---------- */
 var GRID=[];

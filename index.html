@@ -7,7 +7,7 @@
 <title>Freight Tools</title>
 <link rel="stylesheet" href="style.css"></head><body>
 <h2>Freight Tools</h2>
-<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button><button data-t="d">Delivery Dates</button></div>
+<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button><button data-t="lr">Add Late Reasons</button><button data-t="d">Delivery Dates</button></div>
 
 <section id="c">
 <p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
@@ -44,6 +44,14 @@
 <h4>LATE DELIVERY</h4><pre id="r-dl"></pre><button onclick="cpT('r-dl')">Copy delivery</button>
 <div id="r-n"></div>
 <h4>CHECK</h4><div id="r-w" class="w"></div>
+</section>
+
+<section id="lr" hidden>
+<p class="s">Paste trip rows in Late Reports format. Adds eligible missing reasons to the final column and returns the full table.</p>
+<textarea id="lr-in"></textarea>
+<button onclick="runLR()">Add reasons</button><button onclick="cpLR()">Copy table</button>
+<textarea id="lr-out" readonly></textarea>
+<div id="lr-w" class="w"></div>
 </section>
 
 <section id="d" hidden>
