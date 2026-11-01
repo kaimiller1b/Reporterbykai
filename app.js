@@ -182,30 +182,32 @@ function addReason(reasons,reason){if(reasons.some(function(x){return x.toLowerC
 function stageDelay(actualText,plannedText){var actual=toDate(actualText),planned=toDate(plannedText);
   return actual&&planned?Math.round((actual-planned)/6e4):null}
 function runLR(){var rows=parse($("lr-in").value),messages=[];
-  rows.forEach(function(row){var load=tr(row[3]||"")||"(unknown load)",note=row[14]||"";
+  rows.forEach(function(row){var trip=tr(row[2]||"")||"(unknown trip)",note=row[14]||"";
     if(/tracking\s+on\s+time|eta\s+on\s+time/i.test(note))return;
-    if(row.length<15){messages.push("Load "+load+" wasn't updated, check.");return}
+    if(row.length<15){messages.push("Trip "+trip+": check: Pu not updated");return}
     var reasons=reasonParts(note),flags=[tr(row[7]||""),tr(row[10]||""),tr(row[13]||"")];
     var delays=[stageDelay(row[6],row[5]),stageDelay(row[8],row[9]),stageDelay(row[11],row[12])];
-    var invalid=false;
-    flags.forEach(function(flag,i){if(flag==="NO"&&(delays[i]===null||delays[i]<=0))invalid=true;
-      if(flag==="YES"&&delays[i]>0)invalid=true});
-    if(invalid){messages.push("Load "+load+" wasn't updated, check.");return}
+    var invalid=false,invalidPickup=false;
+    flags.forEach(function(flag,i){var bad=(flag!=="YES"&&flag!=="NO")||
+        (flag==="NO"&&(delays[i]===null||delays[i]<=0))||(flag==="YES"&&delays[i]>0);
+      if(bad){invalid=true;if(i<2)invalidPickup=true}});
+    if(invalid){messages.push("Trip "+trip+": "+(invalidPickup?"check: Pu not updated":"Big delay"));return}
     var late=flags.map(function(flag,i){return flag==="NO"&&delays[i]>0});
     var originalReasons=reasons.slice(),changed=false;
     if(late[0]){
       if(!hasReasonForStage(originalReasons,late,0))changed=addReason(reasons,"Stuck at the previous load.")||changed;
       if(late[2]&&!hasReasonForStage(originalReasons,late,2))changed=addReason(reasons,"late departure")||changed;
     }else if(late[1]){
-      if(!hasReasonForStage(originalReasons,late,1))messages.push("Load "+load+" wasn't updated, check.");
+      if(!hasReasonForStage(originalReasons,late,1))messages.push("Trip "+trip+": check: Pu not updated");
       if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
-        if(delays[2]<=delays[1])changed=addReason(reasons,"late departure")||changed;
-        else messages.push("Load "+load+" wasn't updated, check.");
+        if(delays[2]>360)messages.push("Trip "+trip+": Big delay");
+        else if(Math.abs(delays[2]-delays[1])<=60)changed=addReason(reasons,"late departure")||changed;
+        else messages.push("Trip "+trip+": Big delay");
       }
     }else if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
       var reason=delays[2]<=120?"traffic":delays[2]<=240?"mechanical issue":delays[2]<=360?"Health issue":null;
       if(reason)changed=addReason(reasons,reason)||changed;
-      else messages.push("Load "+load+" wasn't updated, check.");
+      else messages.push("Trip "+trip+": Big delay");
     }
     if(changed)row[14]=reasons.join("/");
   });
