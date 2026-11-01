@@ -181,6 +181,7 @@ function addReason(reasons,reason){if(reasons.some(function(x){return x.toLowerC
   reasons.push(reason);return true}
 function stageDelay(actualText,plannedText){var actual=toDate(actualText),planned=toDate(plannedText);
   return actual&&planned?Math.round((actual-planned)/6e4):null}
+function deliveryReason(delay){return delay<=120?"traffic":delay<=300?"mechanical issue":null}
 function runLR(){var rows=parse($("lr-in").value),messages=[];
   rows.forEach(function(row){var trip=tr(row[2]||"")||"(unknown trip)",note=row[14]||"";
     if(/tracking\s+on\s+time|eta\s+on\s+time/i.test(note))return;
@@ -200,12 +201,16 @@ function runLR(){var rows=parse($("lr-in").value),messages=[];
     }else if(late[1]){
       if(!hasReasonForStage(originalReasons,late,1))messages.push("Trip "+trip+": check: Pu not updated");
       if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
-        if(delays[2]>360)messages.push("Trip "+trip+": Big delay");
-        else if(Math.abs(delays[2]-delays[1])<=60)changed=addReason(reasons,"late departure")||changed;
-        else messages.push("Trip "+trip+": Big delay");
+        var netDelay=delays[1]-delays[2];
+        if(netDelay>=0)changed=addReason(reasons,"late departure")||changed;
+        else{
+          var reason=deliveryReason(-netDelay);
+          if(reason)changed=addReason(reasons,reason)||changed;
+          else messages.push("Trip "+trip+": Big delay");
+        }
       }
     }else if(late[2]&&!hasReasonForStage(originalReasons,late,2)){
-      var reason=delays[2]<=120?"traffic":delays[2]<=240?"mechanical issue":delays[2]<=360?"Health issue":null;
+      var reason=deliveryReason(delays[2]);
       if(reason)changed=addReason(reasons,reason)||changed;
       else messages.push("Trip "+trip+": Big delay");
     }
