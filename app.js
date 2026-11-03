@@ -12,7 +12,7 @@ function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   row.push(f);row.line=st;rows.push(row);
   return rows.filter(function(r){return r.some(function(x){return tr(x)})})}
 var RX=/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2}):(\d{2})/;
-function toDate(s){var m=RX.exec(s||"");if(!m)return null;var y=+m[3];if(y<100)y+=2000;return new Date(y,+m[1]-1,+m[2],+m[4],+m[5])}
+function toDate(s){var m=RX.exec(s||"");if(!m)return null;var y=+m[3];if(y<100)y+=2000;if(y<2000||y>2100)return null;return new Date(y,+m[1]-1,+m[2],+m[4],+m[5])}
 function fmt(d){var h=d.getHours(),ap=h>=12?"PM":"AM";h=h%12;if(!h)h=12;
   return (d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear()+" "+h+":"+String(d.getMinutes()).padStart(2,"0")+" "+ap}
 function lines(s){return s.split(/[\r\n]+/).map(tr).filter(Boolean)}
@@ -116,17 +116,9 @@ function runReport(monthly){var prefix=monthly?"mf":"f",rows=parse($(prefix+"-in
     N++;fl.forEach(function(x,i){if(x==="YES")y[i]++});
 
     if(id){if(seen[id])warn.push(tag+": duplicate load number "+id+" (also line "+seen[id]+").");else seen[id]=r.line}
-    var pr=[];var stageIdx=0;
+    var pr=[];
     f.forEach(function(x,i){if(x!=="YES"&&x!=="NO")return;var a=toDate(f[i-2]),b=toDate(f[i-1]);
-      var currStage=stageIdx++;
-      if(i>=2&&a&&b){
-        pr.push([a,b]);
-        var delayMs=currStage===0?b.getTime()-a.getTime():a.getTime()-b.getTime();
-        if(x==="YES"){
-          if(delayMs>864e5)warn.push(tag+": "+nm[currStage]+" flagged YES but actual is "+Math.round(delayMs/36e5)+"h later than planned.");
-          else if(delayMs<-864e5)warn.push(tag+": "+nm[currStage]+" flagged YES but actual is "+Math.round(-delayMs/36e5)+"h earlier than planned.");
-        }
-      }else pr.push(null)});
+      if(i>=2&&a&&b){pr.push([a,b])}else pr.push(null)});
 
     [0,2].forEach(function(stage,k){
       if(fl[stage]!=="NO")return;
