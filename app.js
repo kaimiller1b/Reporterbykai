@@ -12,7 +12,7 @@ function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   row.push(f);row.line=st;rows.push(row);
   return rows.filter(function(r){return r.some(function(x){return tr(x)})})}
 var RX=/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2}):(\d{2})/;
-function toDate(s){var m=RX.exec(s||"");if(!m)return null;var y=+m[3];if(y<100)y+=2000;if(y<2000||y>2100)return null;return new Date(y,+m[1]-1,+m[2],+m[4],+m[5])}
+function toDate(s){var m=RX.exec(s||"");if(!m)return null;var y=+m[3];if(y<100)y+=2000;return new Date(y,+m[1]-1,+m[2],+m[4],+m[5])}
 function fmt(d){var h=d.getHours(),ap=h>=12?"PM":"AM";h=h%12;if(!h)h=12;
   return (d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear()+" "+h+":"+String(d.getMinutes()).padStart(2,"0")+" "+ap}
 function lines(s){return s.split(/[\r\n]+/).map(tr).filter(Boolean)}
@@ -107,34 +107,27 @@ function runReport(monthly){var prefix=monthly?"mf":"f",rows=parse($(prefix+"-in
   if(!date){$(prefix+"-out").value="";$(prefix+"-w").textContent=monthly?"Report month missing: paste a date as the first line or fill the month field.":"Report date missing: paste it as the first line or fill the date field.";return}
   var N=0,y=[0,0,0],buckets=[[0,0,0,0,0],[0,0,0,0,0]],seen={},nm=["pickup","departure","delivery"];
   rows.forEach(function(r){var f=r.map(tr),fl=f.filter(function(x){return x==="YES"||x==="NO"});
-
-    // Skip pasted table header row if present
-    if(r.line<=2&&!fl.length&&f.some(function(x){return/supplier|load\s*id|trip\s*id|contract|scheduled/i.test(x)}))return;
-    var id=f.filter(function(x){return/^\d{8,}$/.test(x)})[0];
-    var tag="Line "+r.line+(id?" (load "+id+")":"");
-    if(fl.length!==3){warn.push(tag+": bad row, "+fl.length+" flags found (need exactly 3).");return}
+    if(fl.length!==3){warn.push("Line "+r.line+": bad row, "+fl.length+" flags found (need exactly 3).");return}
     N++;fl.forEach(function(x,i){if(x==="YES")y[i]++});
-
-    if(id){if(seen[id])warn.push(tag+": duplicate load number "+id+" (also line "+seen[id]+").");else seen[id]=r.line}
-    var pr=[];var stageIdx=0;
-    f.forEach(function(x,i){if(x!=="YES"&&x!=="NO")return;
-      var stage=stageIdx++;var rawA=f[i-2]||"",rawB=f[i-1]||"";
-      if(/1899|1900/.test(rawA)||/1899|1900/.test(rawB)){
-        var bad=/1899|1900/.test(rawA)?rawA:rawB;
-        warn.push(tag+": "+nm[stage]+" date missing/invalid ("+bad+").");
-      }
+    var id=f.filter(function(x){return/^\d{8,}$/.test(x)})[0];
+    if(id){if(seen[id])warn.push("Line "+r.line+": duplicate load number "+id+" (also line "+seen[id]+").");else seen[id]=r.line}
+    var pr=[];f.forEach(function(x,i){if(x!=="YES"&&x!=="NO")return;
+      var rawA=f[i-2]||"",rawB=f[i-1]||"";
+      // Warn if Excel stored a bare time with no date (shows as 12/30/1899)
+      if(/\b1[89]\d\d\b/.test(rawA)||/\b1[89]\d\d\b/.test(rawB)){
+        var bad=/\b1[89]\d\d\b/.test(rawA)?rawA:rawB;
+        warn.push("Line "+r.line+": "+nm[pr.length]+" date looks like a bare time with no date ("+bad+"). Fix in Excel.")}
       var a=toDate(rawA),b=toDate(rawB);
       if(i>=2&&a&&b){pr.push([a,b])}else pr.push(null)});
-
     [0,2].forEach(function(stage,k){
       if(fl[stage]!=="NO")return;
       var times=pr[stage];
-      if(!times){warn.push(tag+": "+nm[stage]+" flagged NO but times are missing/unreadable; excluded from lateness buckets.");return}
-      // Pickup is planned/actual; delivery is actual/planned, as in the flagger.
+      if(!times){warn.push("Line "+r.line+": "+nm[stage]+" flagged NO but times are missing/unreadable; excluded from lateness buckets.");return}
+      // Pickup: planned=times[0], actual=times[1]. Delivery: actual=times[0], planned=times[1].
       var d=Math.round((stage?times[0]-times[1]:times[1]-times[0])/6e4);
-      if(d<=0){warn.push(tag+": "+nm[stage]+" flagged NO but delay is on time or early; excluded from lateness buckets.");return}
+      if(d<=0){warn.push("Line "+r.line+": "+nm[stage]+" flagged NO but delay is on time or early; excluded from lateness buckets.");return}
       buckets[k][d<=15?0:d<=30?1:d<60?2:d<180?3:4]++});
-    if(pr[0]&&pr[2]&&Math.max(pr[2][0],pr[2][1])<Math.min(pr[0][0],pr[0][1]))warn.push(tag+": delivery is earlier than pickup.")});
+    if(pr[0]&&pr[2]&&Math.max(pr[2][0],pr[2][1])<Math.min(pr[0][0],pr[0][1]))warn.push("Line "+r.line+": delivery is earlier than pickup.")});
   $(prefix+"-w").textContent=warn.join("\n");
   if(!N){$(prefix+"-out").value="";return}
   var pc=function(n){return(n/N*100).toFixed(2)+"%"};
