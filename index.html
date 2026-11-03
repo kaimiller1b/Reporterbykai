@@ -7,7 +7,7 @@
 <title>Freight Tools</title>
 <link rel="stylesheet" href="style.css"></head><body>
 <h2>Freight Tools</h2>
-<div class="tabs"><button data-t="c" class="on">Table-maker</button><button data-t="m">5min Minuer</button><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="r">Late Reports</button><button data-t="lr">Add Late Reasons</button><button data-t="d">Delivery Dates</button></div>
+<div class="tabs"><button data-t="c" class="on">Table-maker</button><!-- Temporarily hidden: <button data-t="m">5min Minuer</button> --><button data-t="g">On-time</button><button data-t="f">GEGW</button><button data-t="mf">Monthly Reporter</button><button data-t="r">Late Reports</button><button data-t="lr">Add Late Reasons</button><!-- Temporarily hidden: <button data-t="d">Delivery Dates</button> --></div>
 
 <section id="c">
 <p class="s">Paste raw rows from Excel. Output copies as Arial 10, centered.</p>
@@ -19,6 +19,7 @@
 <div id="c-w" class="w"></div>
 </section>
 
+<!-- Temporarily hidden for later use.
 <section id="m" hidden>
 <p class="s">Paste rows (planned/actual dates + flag, x3). For YES flags that are 1–5 min late, subtracts 5 min from the actual time. All other fields stay unchanged.</p>
 <textarea id="m-in"></textarea>
@@ -26,6 +27,7 @@
 <div id="m-w" class="w"></div>
 <textarea id="m-out" readonly></textarea>
 </section>
+-->
 
 <section id="f" hidden>
 <p class="s">Paste load rows (first line may be the report date). Flags = fields that are exactly YES/NO.</p>
@@ -34,6 +36,15 @@
 <button onclick="runF()">Build report</button><button onclick="cpT('f-out')">Copy report</button>
 <div id="f-w" class="w"></div>
 <textarea id="f-out" readonly></textarea>
+</section>
+
+<section id="mf" hidden>
+<p class="s">Paste load rows for the full month. Fully blank rows are ignored. Flags = fields that are exactly YES/NO.</p>
+<textarea id="mf-in"></textarea>
+<div>Report month: <input id="mf-month" type="month"></div>
+<button onclick="runMF()">Build monthly report</button><button onclick="cpT('mf-out')">Copy report</button>
+<div id="mf-w" class="w"></div>
+<textarea id="mf-out" readonly></textarea>
 </section>
 
 <section id="r" hidden>
@@ -55,6 +66,7 @@
 <div id="lr-w" class="w"></div>
 </section>
 
+<!-- Temporarily hidden for later use.
 <section id="d" hidden>
 <p class="s">Paste trip rows. Returns trip, actual delivery date, and driver name for SALEM TRUCK RENTAL LLC, WRNR LLC, and Lucky Freight LLC. Round trips from Allen Park, MI or Irving, TX use the date for the stop before the return destination.</p>
 <textarea id="d-in"></textarea>
@@ -62,6 +74,7 @@
 <div id="d-w" class="w"></div>
 <textarea id="d-out" readonly></textarea>
 </section>
+-->
 
 <section id="g" hidden>
 <p class="s">Paste rows (planned/actual dates + flag, x3). Flags get recalculated: 1 min or more late = NO, on time or early = YES. Copies as Arial 10, centered.</p>

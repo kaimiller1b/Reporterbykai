@@ -1,7 +1,7 @@
 var $=function(i){return document.getElementById(i)},tr=function(x){return x.trim()},ROWS=[];
 document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){
   document.querySelectorAll(".tabs button").forEach(function(x){x.className=x==b?"on":""});
-  ["c","m","f","r","lr","d","g"].forEach(function(t){$(t).hidden=t!=b.dataset.t})}});
+  document.querySelectorAll("section").forEach(function(s){s.hidden=s.id!=b.dataset.t})}});
 function parse(t){var rows=[],row=[],f="",q=false,ln=1,st=1;
   for(var i=0;i<t.length;i++){var c=t[i];
     if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else{if(c=="\n")ln++;f+=c}}
@@ -96,11 +96,15 @@ function runC(){var warn=[];ROWS=[];
   $("c-out").value=ROWS.map(function(r){return r.join("\t")}).join("\n");$("c-w").textContent=warn.join("\n")}
 function cpC(){cpH(ROWS,$("c-out").value)}
 
-/* ---------- Filter ---------- */
-function runF(){var rows=parse($("f-in").value),warn=[],date="";
+/* ---------- GEGW report ---------- */
+function runReport(monthly){var prefix=monthly?"mf":"f",rows=parse($(prefix+"-in").value),warn=[],date="";
   if(rows.length){var ne=rows[0].map(tr).filter(Boolean);if(ne.length==1&&/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(ne[0])){var p=ne[0].split("/");date=p[0].padStart(2,"0")+"/"+p[1].padStart(2,"0")+"/"+p[2];rows.shift()}}
-  if(!date&&$("f-date").value){var q=$("f-date").value.split("-");date=q[1]+"/"+q[2]+"/"+q[0]}
-  if(!date){$("f-out").value="";$("f-w").textContent="Report date missing: paste it as the first line or fill the date field.";return}
+  if(monthly){
+    var month=$("mf-month").value;
+    if(month){var mp=month.split("-");date=new Date(+mp[0],+mp[1]-1,1).toLocaleString("en-US",{month:"long",year:"numeric"})}
+    else if(date){var dp=date.split("/");date=new Date(+dp[2],+dp[0]-1,1).toLocaleString("en-US",{month:"long",year:"numeric"})}
+  }else if(!date&&$("f-date").value){var q=$("f-date").value.split("-");date=q[1]+"/"+q[2]+"/"+q[0]}
+  if(!date){$(prefix+"-out").value="";$(prefix+"-w").textContent=monthly?"Report month missing: paste a date as the first line or fill the month field.":"Report date missing: paste it as the first line or fill the date field.";return}
   var N=0,y=[0,0,0],buckets=[[0,0,0,0,0],[0,0,0,0,0]],seen={},nm=["pickup","departure","delivery"];
   rows.forEach(function(r){var f=r.map(tr),fl=f.filter(function(x){return x==="YES"||x==="NO"});
     if(fl.length!==3){warn.push("Line "+r.line+": bad row, "+fl.length+" flags found (need exactly 3).");return}
@@ -118,17 +122,19 @@ function runF(){var rows=parse($("f-in").value),warn=[],date="";
       if(d<=0){warn.push("Line "+r.line+": "+nm[stage]+" flagged NO but delay is on time or early; excluded from lateness buckets.");return}
       buckets[k][d<=15?0:d<=30?1:d<60?2:d<180?3:4]++});
     if(pr[0]&&pr[2]&&Math.max(pr[2][0],pr[2][1])<Math.min(pr[0][0],pr[0][1]))warn.push("Line "+r.line+": delivery is earlier than pickup.")});
-  $("f-w").textContent=warn.join("\n");
-  if(!N){$("f-out").value="";return}
+  $(prefix+"-w").textContent=warn.join("\n");
+  if(!N){$(prefix+"-out").value="";return}
   var pc=function(n){return(n/N*100).toFixed(2)+"%"};
   var labels=["0-15 min late","15-30 min late","30-1hr late","1+ hr late","3hr + late"];
-  $("f-out").value=["**GEGW loads report "+date+"**",
+  $(prefix+"-out").value=["**GEGW loads "+(monthly?"monthly report ":"report ")+date+"**",
     y[0]+" out of "+N+" loads picked up on time **"+pc(y[0])+"**",
     y[1]+" out of "+N+" loads departed on time **"+pc(y[1])+"**",
     y[2]+" out of "+N+" loads delivered on time **"+pc(y[2])+"**",
     "", "PU:"]
     .concat(labels.map(function(label,i){return label+": "+buckets[0][i]}),
       ["", "Delivery:"],labels.map(function(label,i){return label+": "+buckets[1][i]})).join("\n")}
+function runF(){runReport(false)}
+function runMF(){runReport(true)}
 
 /* ---------- Reporter ---------- */
 var COMPOUND=["Dock/Yard operations","Traffic/Construction"];
