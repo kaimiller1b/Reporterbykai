@@ -116,8 +116,14 @@ function runReport(monthly){var prefix=monthly?"mf":"f",rows=parse($(prefix+"-in
     N++;fl.forEach(function(x,i){if(x==="YES")y[i]++});
 
     if(id){if(seen[id])warn.push(tag+": duplicate load number "+id+" (also line "+seen[id]+").");else seen[id]=r.line}
-    var pr=[];
-    f.forEach(function(x,i){if(x!=="YES"&&x!=="NO")return;var a=toDate(f[i-2]),b=toDate(f[i-1]);
+    var pr=[];var stageIdx=0;
+    f.forEach(function(x,i){if(x!=="YES"&&x!=="NO")return;
+      var stage=stageIdx++;var rawA=f[i-2]||"",rawB=f[i-1]||"";
+      if(/1899|1900/.test(rawA)||/1899|1900/.test(rawB)){
+        var bad=/1899|1900/.test(rawA)?rawA:rawB;
+        warn.push(tag+": "+nm[stage]+" date missing/invalid ("+bad+").");
+      }
+      var a=toDate(rawA),b=toDate(rawB);
       if(i>=2&&a&&b){pr.push([a,b])}else pr.push(null)});
 
     [0,2].forEach(function(stage,k){
